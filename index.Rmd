@@ -1,0 +1,103 @@
+---
+title: "Datos de las orquideas"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+library(ggplot2)
+library(graphics)
+library(plotly)
+library(dbplyr)
+library(dplyr)
+library(DT)
+library(leaflet)
+library(sf)
+library(raster)
+library(tidyverse)
+library(PASWR2)
+library(spData)
+library(rgdal)
+library(sf)
+library(dplyr)
+library(spData)
+library(leaflet)
+library(plotly)
+library(DT)
+library(st)
+library(raster)
+library(dplyr)
+library(rmapshaper)
+library(spData)
+library(sf)
+library(leaflet)
+library(dplyr)
+library(DT)
+library(plotly)
+library(raster)
+library(tidyr)
+library(spData)
+
+```
+
+## Datos de Orquideas en CR 
+
+
+
+```{r}
+# CARGA ARCHIVO 
+datos.orquideas <- 
+  st_read(
+  "orchidaceae-cr-registros.csv",
+   options = c(
+      "X_POSSIBLE_NAMES=decimalLongitude",
+      "Y_POSSIBLE_NAMES=decimalLatitude"),quiet = TRUE)
+datos.ASP <- 
+  st_read(
+    "https://raw.githubusercontent.com/gf0604-procesamientodatosgeograficos/2021i-datos/main/sinac/asp/asp-wgs84.geojson",
+    quiet = TRUE
+  )
+
+st_crs(datos.orquideas) = 4326
+st_crs(datos.ASP) = 4326
+```
+
+## LIMPIEZA
+
+
+
+```{r}
+# Quitar datos 
+datos.orquideas$species[datos.orquideas$species == ""] <- "especies"
+
+
+orquideas_CRS <- datos.orquideas %>%
+  filter(!is.na(coordinateUncertaintyInMeters) & coordinateUncertaintyInMeters <= 1000)%>%
+  filter(species!="especies")
+
+cat("Cantidad de registros después de descartar los valores mayores a mil (1000)", nrow(datos.ASP))
+```
+
+```{r}
+asp_CRS <- 
+   datos.ASP %>%
+   filter(descripcio!="Area marina de Manejo" & descripcio!="Area marina protegida")
+
+```
+
+
+# 
+
+
+```{r}
+registros_asp_CRS <-
+  asp_CRS %>%
+  st_make_valid() %>%
+  st_join (orquideas_CRS) %>%
+  group_by (nombre_asp) %>%
+  summarize(especies = n())
+```
+
+
+
+
+
